@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2020-2021 CERN.
+# Copyright (C) 2020-2023 CERN.
 # Copyright (C) 2021 TU Wien.
 # Copyright (C) 2023 ULB Münster.
 #
@@ -9,13 +9,12 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-import json
 import re
 import sys
 from os import listdir
 
 from ..helpers.docker_helper import DockerHelper
-from ..helpers.process import ProcessResponse, run_cmd, run_interactive
+from ..helpers.process import ProcessResponse, run_cmd
 from ..helpers.rdm import rdm_version
 from .steps import FunctionStep
 
@@ -113,11 +112,10 @@ class RequirementsCommands(object):
     @classmethod
     def check_docker_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the docker version."""
-        # Use JSON Formatted output and parse it
+        # Output comes in the form of '20.10.10\n'
         try:
-            result = run_cmd(["docker", "version", "--format", "json"])
-            result_json = json.loads(result.output.strip())
-            version = cls._version_from_string(result_json["Client"]["Version"])
+            result = run_cmd(["docker", "version", "--format", "{{.Client.Version}}"])
+            version = cls._version_from_string(result.output.strip())
             return cls._check_version("Docker", version, major, minor, patch, exact)
         except Exception as err:
             return ProcessResponse(error=f"Docker not found. Got {err}.", status_code=1)
